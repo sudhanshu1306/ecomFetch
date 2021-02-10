@@ -64,7 +64,9 @@ const userSchema=new mongoose.Schema({
 });
 const User=new mongoose.model('User',userSchema);
 
+
 app.use(express.static("public"));
+//app.use(express.static("node_modules"));
 app.use('/uploads',express.static("uploads"));
 app.set('view engine','ejs');
 
