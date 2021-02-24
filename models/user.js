@@ -4,7 +4,7 @@ const userSchema=new mongoose.Schema({
   email:String,
   password:String,
   fullname:{type:String,default:"admin"},
-  profileImage:{type:String,default:"defaultProfile.jpg"}
+  profileImage:{type:String,default:"/uploads/defaultProfile.jpg"}
 });
 userSchema.plugin(passportLocalMongoose, {
   usernameField: 'email'
