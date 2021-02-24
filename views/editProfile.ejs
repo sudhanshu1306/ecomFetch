@@ -1,0 +1,24 @@
+
+  <%- include('header.ejs') %>
+
+  <div style="margin-left:210px;">
+
+    <h1 align="center">Change details for <%= user.fullname %></h1>
+    <div class="container">
+      <form action="/editProfile" method="post" enctype="multipart/form-data">
+
+
+      <div class="form-group lbl">
+     <label for="exampleInputEmail1 "  class="">Full Name</label>
+     <input class="form-control" id="exampleInputEmail1"  name="fullname" placeholder="" value="<%= user.fullname %>"/>
+   </div>
+  <div class="form-group lbl" >
+    <label for="exampleFormControlFile1">Profle Image</label>
+    <input type="file" class="form-control-file" id="exampleFormControlFile1" name="image">
+  </div>
+   <button type="submit" style="margin-left:40%; margin-bottom:5%;" name="id" value="<%=user._id%>" class="btn btn-primary">Edit profile</button>
+ </form>
+    </div>
+  </div>
+  </body>
+</html>

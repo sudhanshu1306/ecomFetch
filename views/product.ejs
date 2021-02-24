@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
@@ -10,7 +10,11 @@
     <title>Product</title>
   </head>
   <body style="background-color:#f5d782;">
-    <h1 align="center">Welcome to product page</h1>
+    <h1 align="center">Welcome to product page</h1> -->
+    <%- include('header.ejs') %>
+
+    <div style="margin-left:210px;">
+
     <div class="container">
 
       <% if(success){ %>
@@ -57,5 +61,6 @@
         <a href="/editProduct/<%=product.id%>">  <button type="button" class="btn btn-primary" name="button">Add details</button> </a>
     <%  } %>
     </div>
+  </div>
   </body>
 </html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js" integrity="sha384-q2kxQ16AaE6UbzuKqyBE9/u/KzioAlnx2maXQHiDX9d4/zp8Ok3f+M7DPm+Ib6IU" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.min.js" integrity="sha384-pQQkAEnwaBkjpqZ8RU1fF1AKtTcHJwFl3pblpTlHXybJjHpMYo79HY3hIi4NKxyj" crossorigin="anonymous"></script>
+     <script src="https://code.jquery.com/jquery-3.5.1.js" charset="utf-8"></script>
+    <script src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js" charset="utf-8"></script>
+    <script src="https://cdn.datatables.net/1.10.23/js/dataTables.bootstrap4.min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.23/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.0/font/bootstrap-icons.css">
+    <title>ECOM App</title>
+  </head>
+  <body style="background-color:#eaeaea">
+    <div class="pro">
+      <div class="">
+        <img class="pro-img" src="<%=user.profileImage%>" alt="Profile image">
+
+      </div>
+
+      <h6 align="center"><%=user.fullname%>    <a href="/editProfile" style="text-decoration:none" > <i class="bi bi-pencil-square"></i></a></h6>
+
+      <!-- <i class="fas fa-user-edit"></i> -->
+
+    </div>
+    <div class="sidenav">
+
+      <a href="/">Catalog</a>
+      <a href="#">Multi-channel Listing</a>
+      <a href="#">Order Management</a>
+      <a href="#">Vendor Management</a>
+      <a href="#">Payment Management</a>
+      <a href="#">Inventory Management</a>
+    </div>
+    <div class="main">
+        <div class="di" style="margin-left:3%">
+          <a  href="/import">Import </a>
+        </div>
+        <div class="di" style="margin-left:18%">
+          <a  href="/review">Review</a>
+
+        </div>
+        <div class="di" style="margin-left:18%">
+          <a  href="/enrich">Enrichment</a>
+
+        </div>
+        <div class="di" style="margin-left:18%">
+          <a href="/">Master catalog</a>
+
+        </div>
+    </div>

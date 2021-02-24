@@ -1,0 +1,69 @@
+  <%- include('header.ejs') %>
+
+  <div style="margin-left:210px;">
+
+
+    <div class="container">
+      <table class="table table-bordered " id="example">
+   <thead class="thead-dark">
+     <tr>
+       <th scope="col">Number</th>
+       <th scope="col">Product SKU</th>
+       <th scope="col">Product Type</th>
+       <th scope="col">Brand</th>
+       <th scope="col">Product name</th>
+       <th scope="col">EAN</th>
+       <th scope="col">UPC</th>
+       <th scope="col">Suppliers</th>
+       <th scope="col">Edit</th>
+       <th scope="col">Delete</th>
+       <th scope="col">Review</th>
+
+     </tr>
+   </thead>
+   <tbody>
+     <% products.forEach((product,index)=>{ %>
+       <tr>
+         <th scope="row"><%= index+1%> </th>
+         <td><%= product.sku %></td>
+         <td><%= product.productType %></td>
+         <td><%= product.brand %></td>
+         <td><a href="/product/<%=product._id%>"> <%= product.product %></a> </td>
+         <td><%= product.ean %></td>
+         <td><%= product.upc %></td>
+         <td> <a href="/suppliers/<%=product._id%>"><%= product.supplier.length%></a> </td>
+         <td><form class="" action="/edit" method="post"><button type="submit" name="id" class="btn btn-outline" value="<%=product._id%>"><i class="bi bi-pencil-square"></i></button></form></td>
+         <td> <a href="/review/delete/<%=product._id%>" onclick="return del();"><button type="button" class="btn btn-outline"> <i class="bi bi-trash-fill"></i></button></a> </td>
+         <td>
+           <form class="" action="/review/change" method="post">
+
+             <select style="width:120px;"  class="custom-select" id="inputGroupSelect03" name="review">
+               <option selected><%=product.review%></option>
+               <option value="reviewed">Reviewed</option>
+               <option value="discarded">discarded</option>
+             </select>
+
+             <div class="input-group-prepend">
+               <button class="btn btn-outline-secondary btn-sm" type="submit" name="id" value="<%=product._id%>">Change</button>
+             </div>
+           </form>
+         </td>
+       </tr>
+
+     <% }) %>
+
+   </tbody>
+ </table>
+
+    </div>
+
+    <script type="text/javascript">
+      function del(){
+        return confirm("Sure you want to delete?");
+      }
+    $('#example').DataTable();
+
+    </script>
+ </div>
+  </body>
+</html>

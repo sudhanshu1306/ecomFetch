@@ -19,56 +19,62 @@ mongoose.connect(process.env.MONGO_URL, {
 });
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
+import session from "express-session";
+import passport from "passport";
+import passportLocalMongoose from "passport-local-mongoose";
 import axios from "axios";
 import csv from "csvtojson";
 import ejs from "ejs";
 import multer from "multer";
+import objectsToCsv from "objects-to-csv";
 
 const Port = process.env.PORT;
 
 const server = app.listen(Port, (req, res) => {
   console.log("Server is listening on port " + Port);
 });
-
-
-//mongoose schema
-const supplierSchema=new mongoose.Schema({
-  product:String,
-  name:String,
-  price:String,
-  quantity:String
-},{timestamps:true});
-const Supplier=new mongoose.model('Supplier',supplierSchema);
-const masterSchema=new mongoose.Schema({
-  sku:{type:String,unique:true},
-  productType:String,
-  brand:String,
-  product:{type:String,unique:true},
-  note:String,
-  usd:String,
-  newProduct:String,
-  goodPrice:String,
-  ean:String,
-  upc:String,
-  supplier: [supplierSchema],
-  details:[],
-  changedDetails:[],
-  listingDetails:[],
-},{
-  timestamps:true
-});
-const Master=new mongoose.model('Master',masterSchema);
-const userSchema=new mongoose.Schema({
-  email:String,
-  password:String
-});
-const User=new mongoose.model('User',userSchema);
+import User from "./models/user.js";
+import Supplier from "./models/supplier.js";
+import Master from "./models/master.js";
+import signupRoute from "./routes/registration.js";
+import loginRoute from "./routes/login.js";
+import {isAuthenticated} from "./controllers/registration.js";
+import importRoute from "./routes/import.js";
+import reviewRoute from "./routes/review.js";
 
 
 app.use(express.static("public"));
-//app.use(express.static("node_modules"));
+app.use('/product',express.static("public"));
+app.use('/editProduct',express.static("public"));
+app.use('/suppliers',express.static("public"));
 app.use('/uploads',express.static("uploads"));
+app.use('/editProduct/uploads',express.static("uploads"));
+app.use('/suppliers/uploads',express.static("uploads"));
+app.use('/product/uploads',express.static("uploads"));
 app.set('view engine','ejs');
+
+
+
+//setting up passportLocalMongoose
+
+app.use(session({
+  secret:process.env.SESSION_SECRET,
+  resave:false,
+  saveUninitialized:false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+//setting up routes
+app.use("/signup",signupRoute);
+app.use("/login",loginRoute);
+app.use("/import",importRoute);
+app.use("/review",reviewRoute);
+
+passport.use(User.createStrategy());
+
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 //configuring nylas
 Nylas.config({
@@ -77,64 +83,15 @@ Nylas.config({
 });
 const nylas = Nylas.with(process.env.ACCESS_TOKEN);
 
-var isLoggedIn=false;
 
-const isAuthenticated=(req,res,next)=>{
-  if(isLoggedIn)
-    return next();
-  res.redirect("/login");
-}
-
-app.get("/signup",(req,res)=>{
-  res.render("signup");
-});
-app.post("/signup",(req,res)=>{
-  const user=new User({email:req.body.email,password:req.body.password});
-  user.save();
-  res.redirect("/");
-});
-
-
-
-app.get("/login",(req,res)=>{
-  res.render("login");
-});
-app.post("/login",(req,res)=>{
-   User.findOne({email:req.body.email},(err,foundUser)=>{
-     if(foundUser&&foundUser.password===req.body.password){
-       isLoggedIn=true;
-       console.log("logged in");
-       res.redirect("/");
-     }
-     else{
-       console.log("incorrect");
-       res.redirect("/login");
-     }
-   });
-});
-
-
-
-
-
-
-app.get("/editProduct/:id",isAuthenticated,async(req,res)=>{
-  await Master.findById(req.params.id,(err,foundMaster)=>{
-    if(foundMaster.details.length==0|| !foundMaster.details[0].data)
-    {
-      var product={id:foundMaster._id,name:foundMaster.product};
-      res.render("editProduct",{product:product});
-    }
-    else if(!foundMaster.changedDetails||foundMaster.changedDetails.length==0){
-      // console.log(foundMaster.listingDetails);
-    res.render("editProduct",{product:foundMaster.listingDetails[0]});}
+app.get("/editProfile",isAuthenticated,(req,res)=>{
+  User.findOne({email:req.session.passport.user},(err,foundUser)=>{
+    if(err)
+    console.log(err);
     else
-    res.render("editProduct",{product:foundMaster.changedDetails[0]});
+    res.render("editProfile",{user:foundUser});
   });
 });
-
-
-
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads/')
@@ -146,20 +103,100 @@ var storage = multer.diskStorage({
   }
 });
 
-const upload=multer({storage:storage});
-const image=upload.array('images');
+var upload=multer({storage:storage});
+var image=upload.single('image');
+
+app.post("/editProfile",isAuthenticated,image,(req,res)=>{
+  User.findOne({email:req.session.passport.user},(err,foundUser)=>{
+    if(err)
+    console.log(err);
+    else{
+      foundUser.fullname=req.body.fullname;
+      if(req.file){
+        foundUser.profileImage=req.file.path;
+      }
+      foundUser.save();
+    }
+    res.redirect("/");
+  });
+});
+
+
+
+app.post("/deactivate",async(req,res)=>{
+  // console.log(req.body);
+  // const obj= await Supplier.updateOne({_id:req.body.id},{deactivated:req.body.deactivated});
+  // console.log(obj);
+  await Supplier.findById(req.body.id,(err,foundSupplier)=>{
+    foundSupplier.deactivated=req.body.deactivated;
+    foundSupplier.save();
+  });
+  await Master.findById(req.body.product,(err,foundProduct)=>{
+    foundProduct.supplier.forEach(splr=>{
+      if(splr._id.equals(req.body.id))
+      splr.deactivated=req.body.deactivated;
+    });
+    foundProduct.save();
+  });
+   res.redirect("/suppliers/"+req.body.product);
+})
+
+app.get("/enrich",isAuthenticated,async(req,res)=>{
+  var user="";
+  await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
+    user=foundUser;
+  });
+  await Master.find({},(err,foundItems)=>{
+    if(err)
+    console.log(err.message);
+    else{
+      res.render("enrich",{products:foundItems,user:user});
+    }
+  })
+})
+
+
+
+app.get("/editProduct/:id",isAuthenticated,async(req,res)=>{
+  var user="";
+  await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
+    user=foundUser;
+  });
+  await Master.findById(req.params.id,(err,foundMaster)=>{
+    if(foundMaster.details.length==0|| !foundMaster.details[0].data)
+    {
+      var product={id:foundMaster._id,name:foundMaster.product};
+      res.render("editProduct",{product:product,user:user});
+    }
+    else if(!foundMaster.changedDetails||foundMaster.changedDetails.length==0){
+      // console.log(foundMaster.listingDetails);
+    res.render("editProduct",{product:foundMaster.listingDetails[0],user:user});}
+    else
+    res.render("editProduct",{product:foundMaster.changedDetails[0],user:user});
+  });
+});
+
+
+
+ storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/')
+  },
+  filename: function (req, file, cb) {
+    console.log(file.mimetype.substring(file.mimetype.indexOf("/")));
+    var ext=file.mimetype.substring(file.mimetype.indexOf("/")+1);
+    cb(null, Date.now() +"."+ ext) //Appending extension
+  }
+});
+
+ upload=multer({storage:storage});
+ image=upload.array('images');
 
 
 
 app.post("/editProduct",isAuthenticated,image,async(req,res)=>{
   var r=req.body;
-//  await Master.updateOne({_id:r.id},{changedDetails:[{description:r.description,weight:r.weight,name:r.name,length:r.length,width:r.width,height:r.height,color:r.color,category:r.category,features:r.features,id:r.id}]});
   await Master.findById(req.body.id).then(async foundMaster=>{
-    //console.log(req.body);
-    //console.log(foundMaster.changedDetails);
-
-    // foundMaster.changedDetails=[];
-    // foundMaster.changedDetails.push();
     var images=foundMaster.listingDetails[0].images;
     if(req.files){
     req.files.forEach(file=>{
@@ -174,19 +211,27 @@ app.post("/editProduct",isAuthenticated,image,async(req,res)=>{
 
 
 app.get("/",isAuthenticated, async (req, res) => {
+  var user="";
+  await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
+    user=foundUser;
+  });
   await Master.find({},(err,foundItems)=>{
     if(err)
     console.log(err.message);
     else{
-      res.render("home",{products:foundItems});
+      res.render("home",{products:foundItems,user:user});
     }
   })
 });
 
 
 app.post("/edit",isAuthenticated,async(req,res)=>{
+  var user="";
+  await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
+    user=foundUser;
+  });
   await Master.findById(req.body.id,(err,foundMaster)=>{
-    res.render("edit",{product:foundMaster});
+    res.render("edit",{product:foundMaster,user:user});
   });
 });
 
@@ -196,8 +241,12 @@ app.post("/change",isAuthenticated,async(req,res)=>{
 });
 
 app.get("/suppliers/:product",isAuthenticated,async(req,res)=>{
+  var user="";
+  await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
+    user=foundUser;
+  });
   await Master.findById(req.params.product,(err,foundProduct)=>{
-    res.render("suppliers",{suppliers:foundProduct.supplier});
+    res.render("suppliers",{suppliers:foundProduct.supplier,id:req.params.product,user:user});
   });
 });
 
@@ -207,13 +256,29 @@ function round(num){
 }
 
 app.get("/product/:id",isAuthenticated,async(req,res)=>{
+  var user="";
+  await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
+    user=foundUser;
+  });
   const url=req.protocol+'://'+req.get('host')+'/';
   await Master.findById(req.params.id,async(err,foundMaster)=>{
+
     if(foundMaster.details.length!==0&&foundMaster.details[0].data){
       if(foundMaster.listingDetails.length!=0&& foundMaster.changedDetails.length==0)
-      {res.render("product",{success:true ,product:foundMaster.listingDetails[0],url:url});}
+      {
+        var user="";
+        await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
+          user=foundUser;
+        });
+        res.render("product",{success:true ,product:foundMaster.listingDetails[0],url:url,user:user});
+      }
       else if(foundMaster.listingDetails.length!=0&& foundMaster.changedDetails.length!=0)
-      {res.render("product",{success:true ,product:foundMaster.changedDetails[0],url:url});}
+      {
+        var user="";
+        await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
+          user=foundUser;
+        });
+        res.render("product",{success:true ,product:foundMaster.changedDetails[0],url:url,user:user});}
       else{
       var product={};
       var s=foundMaster.details[0].data[0].attributes;
@@ -234,13 +299,38 @@ app.get("/product/:id",isAuthenticated,async(req,res)=>{
       foundMaster.listingDetails[0]=product;
       // foundMaster.save();
         await Master.updateOne({_id:foundMaster._id},{listingDetails:[product]});
-      res.render("product",{success:true ,product:product,url:url});}
+        var user="";
+        await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
+          user=foundUser;
+        });
+      res.render("product",{success:true ,product:product,url:url,user:user});}
     }
     else{
+      var user="";
+      await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
+        user=foundUser;
+      });
       // res.render("product",{product:{}});
       var product={id:foundMaster._id};
-      res.render("product",{success:false,product:product});
+      res.render("product",{success:false,product:product,user:user});
     }
+  });
+});
+
+
+
+//writing to csv
+app.get("/download",async(req,res)=>{
+ await  Master.find({},async(err,foundMasters)=>{
+   var obj=[];
+   foundMasters.forEach(master=>{
+     obj.push(master._doc);
+   });
+    const csv = new objectsToCsv(obj);
+    console.log("writing file to disk ");
+    console.log(obj[0]);
+    await csv.toDisk('./uploads/export.csv');
+    res.redirect("/uploads/export.csv");
   });
 });
 
@@ -319,6 +409,17 @@ async function myfun(){
 
           if(foundSupplier){
           await  Supplier.updateOne({product:rows[i][3],name:message.subject}, {price:rows[i][5], quantity:rows[i][10]});
+          await Master.findOne({product:rows[i][3]},(err,foundProduct)=>{
+            //console.log(foundProduct.product);
+            foundProduct.supplier.forEach(splr=>{
+              if(splr.name===message.subject)
+              {
+                splr.price=rows[i][5],
+                splr.quantity=rows[i][10];
+              }
+            });
+            foundProduct.save();
+          });
           }
           else{
             var supplier=new Supplier({

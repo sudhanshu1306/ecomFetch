@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
@@ -14,8 +14,15 @@
 
     <title>Home</title>
   </head>
-  <body>
-    <h1 align="center">Welcome to home page</h1>
+  <body> -->
+  <%- include('header.ejs') %>
+  <div style="margin-left:210px;">
+
+
+    <!-- <h1 align="center">Welcome to home page</h1>
+      <button type="button" style="margin-left:10%" name="button" class="btn btn-outline-primary"> <a style="text-decoration:none;color:#e40017" href="/import">Import</a> </button>
+    <button type="button" style="margin-left:50%; float:left" name="button" class="btn btn-outline-primary"> <a style="text-decoration:none;color:#e40017" href="/download">Export CSV</a> </button> -->
+
     <div class="container">
       <table class="table table-bordered " id="example">
    <thead class="thead-dark">
@@ -43,7 +50,7 @@
          <td><%= product.ean %></td>
          <td><%= product.upc %></td>
          <td> <a href="/suppliers/<%=product._id%>"><%= product.supplier.length%></a> </td>
-         <td><form class="" action="/edit" method="post"><button type="submit" name="id" value="<%=product._id%>">Edit</button></form></td>
+         <td><form class="" action="/edit" method="post"><button type="submit" name="id" class="btn btn-outline" value="<%=product._id%>"><i class="bi bi-pencil-square"></i></button></form></td>
        </tr>
 
      <% }) %>
@@ -61,6 +68,6 @@
 //
 // })
     </script>
-
+ </div>
   </body>
 </html>
