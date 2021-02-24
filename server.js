@@ -85,11 +85,12 @@ const nylas = Nylas.with(process.env.ACCESS_TOKEN);
 
 
 app.get("/editProfile",isAuthenticated,(req,res)=>{
+  const url=req.protocol+'://'+req.get('host')+'/';
   User.findOne({email:req.session.passport.user},(err,foundUser)=>{
     if(err)
     console.log(err);
     else
-    res.render("editProfile",{user:foundUser});
+    res.render("editProfile",{user:foundUser,url:url});
   });
 });
 var storage = multer.diskStorage({
@@ -143,6 +144,7 @@ app.post("/deactivate",async(req,res)=>{
 
 app.get("/enrich",isAuthenticated,async(req,res)=>{
   var user="";
+  const url=req.protocol+'://'+req.get('host')+'/';
   await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
     user=foundUser;
   });
@@ -150,7 +152,7 @@ app.get("/enrich",isAuthenticated,async(req,res)=>{
     if(err)
     console.log(err.message);
     else{
-      res.render("enrich",{products:foundItems,user:user});
+      res.render("enrich",{products:foundItems,user:user,url:url});
     }
   })
 })
@@ -159,6 +161,7 @@ app.get("/enrich",isAuthenticated,async(req,res)=>{
 
 app.get("/editProduct/:id",isAuthenticated,async(req,res)=>{
   var user="";
+  const url=req.protocol+'://'+req.get('host')+'/';
   await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
     user=foundUser;
   });
@@ -166,13 +169,13 @@ app.get("/editProduct/:id",isAuthenticated,async(req,res)=>{
     if(foundMaster.details.length==0|| !foundMaster.details[0].data)
     {
       var product={id:foundMaster._id,name:foundMaster.product};
-      res.render("editProduct",{product:product,user:user});
+      res.render("editProduct",{product:product,user:user,url:url});
     }
     else if(!foundMaster.changedDetails||foundMaster.changedDetails.length==0){
       // console.log(foundMaster.listingDetails);
-    res.render("editProduct",{product:foundMaster.listingDetails[0],user:user});}
+    res.render("editProduct",{product:foundMaster.listingDetails[0],user:user,url:url});}
     else
-    res.render("editProduct",{product:foundMaster.changedDetails[0],user:user});
+    res.render("editProduct",{product:foundMaster.changedDetails[0],user:user,url:url});
   });
 });
 
@@ -219,7 +222,8 @@ app.get("/",isAuthenticated, async (req, res) => {
     if(err)
     console.log(err.message);
     else{
-      res.render("home",{products:foundItems,user:user});
+      const url=req.protocol+'://'+req.get('host')+'/';
+      res.render("home",{products:foundItems,user:user,url:url});
     }
   })
 });
@@ -231,7 +235,8 @@ app.post("/edit",isAuthenticated,async(req,res)=>{
     user=foundUser;
   });
   await Master.findById(req.body.id,(err,foundMaster)=>{
-    res.render("edit",{product:foundMaster,user:user});
+    const url=req.protocol+'://'+req.get('host')+'/';
+    res.render("edit",{product:foundMaster,user:user,url:url});
   });
 });
 
@@ -246,7 +251,8 @@ app.get("/suppliers/:product",isAuthenticated,async(req,res)=>{
     user=foundUser;
   });
   await Master.findById(req.params.product,(err,foundProduct)=>{
-    res.render("suppliers",{suppliers:foundProduct.supplier,id:req.params.product,user:user});
+    const url=req.protocol+'://'+req.get('host')+'/';
+    res.render("suppliers",{suppliers:foundProduct.supplier,id:req.params.product,user:user,url:url});
   });
 });
 
@@ -270,6 +276,7 @@ app.get("/product/:id",isAuthenticated,async(req,res)=>{
         await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
           user=foundUser;
         });
+        const url=req.protocol+'://'+req.get('host')+'/';
         res.render("product",{success:true ,product:foundMaster.listingDetails[0],url:url,user:user});
       }
       else if(foundMaster.listingDetails.length!=0&& foundMaster.changedDetails.length!=0)
@@ -278,6 +285,7 @@ app.get("/product/:id",isAuthenticated,async(req,res)=>{
         await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
           user=foundUser;
         });
+        const url=req.protocol+'://'+req.get('host')+'/';
         res.render("product",{success:true ,product:foundMaster.changedDetails[0],url:url,user:user});}
       else{
       var product={};
@@ -303,6 +311,7 @@ app.get("/product/:id",isAuthenticated,async(req,res)=>{
         await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
           user=foundUser;
         });
+        const url=req.protocol+'://'+req.get('host')+'/';
       res.render("product",{success:true ,product:product,url:url,user:user});}
     }
     else{
@@ -312,7 +321,8 @@ app.get("/product/:id",isAuthenticated,async(req,res)=>{
       });
       // res.render("product",{product:{}});
       var product={id:foundMaster._id};
-      res.render("product",{success:false,product:product,user:user});
+      const url=req.protocol+'://'+req.get('host')+'/';
+      res.render("product",{success:false,product:product,user:user,url:url});
     }
   });
 });

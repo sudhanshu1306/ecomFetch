@@ -4,6 +4,7 @@ import User from "../models/user.js";
 
 export const getReview=async(req,res)=>{
   var user="";
+  const url=req.protocol+'://'+req.get('host')+'/';
   await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
     user=foundUser;
   });
@@ -11,7 +12,7 @@ export const getReview=async(req,res)=>{
     if(err)
     console.log(err.message);
     else{
-      res.render("review",{products:foundItems,user:user});
+      res.render("review",{products:foundItems,user:user,url:url});
     }
   })
 }

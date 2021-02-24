@@ -15,17 +15,19 @@ export const getImport=async(req,res)=>{
   await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
     user=foundUser;
   });
-  res.render("import",{user:user});
+  const url=req.protocol+'://'+req.get('host')+'/';
+  res.render("import",{user:user,url:url});
 }
 
 var pt="",dt="";
 export const postImport=async(req,res)=>{
    if(!req.file){
      var user="";
+     const url=req.protocol+'://'+req.get('host')+'/';
      await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
        user=foundUser;
      });
-     res.render("error",{user:user});
+     res.render("error",{user:user,url:url});
    }
    else{
   //console.log(req.file);
