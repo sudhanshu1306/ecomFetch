@@ -30,7 +30,7 @@ export const postImport=async(req,res)=>{
      res.render("error",{user:user,url:url});
    }
    else{
-  //console.log(req.file);
+  //   console.log(req.file);
     var ext=req.file.originalname.substring(req.file.originalname.indexOf(".")+1);
   if(ext==='xlsx'){
     pt='../uploads/'+req.file.filename;
@@ -92,6 +92,9 @@ export const getRead=async(req,res)=>{
 
          child_process.exec(str,(err,data)=>{
         master.details.push(JSON.parse(data));
+        //var dt=JSON.parse(data);
+        if(master.details[0].data)
+        master.status="enriched";
         master.save().catch(err=>{});
       });
     }

@@ -41,7 +41,7 @@ import loginRoute from "./routes/login.js";
 import {isAuthenticated} from "./controllers/registration.js";
 import importRoute from "./routes/import.js";
 import reviewRoute from "./routes/review.js";
-
+import editProductRoute from "./routes/editProduct.js";
 
 app.use(express.static("public"));
 app.use('/product',express.static("public"));
@@ -70,6 +70,7 @@ app.use("/signup",signupRoute);
 app.use("/login",loginRoute);
 app.use("/import",importRoute);
 app.use("/review",reviewRoute);
+app.use("/editProduct",editProductRoute);
 
 passport.use(User.createStrategy());
 
@@ -148,7 +149,7 @@ app.get("/enrich",isAuthenticated,async(req,res)=>{
   await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
     user=foundUser;
   });
-  await Master.find({},(err,foundItems)=>{
+  await Master.find({review:"reviewed"},(err,foundItems)=>{
     if(err)
     console.log(err.message);
     else{
@@ -166,9 +167,13 @@ app.get("/editProduct/:id",isAuthenticated,async(req,res)=>{
     user=foundUser;
   });
   await Master.findById(req.params.id,(err,foundMaster)=>{
-    if(foundMaster.details.length==0|| !foundMaster.details[0].data)
+    if((foundMaster.listingDetails && foundMaster.listingDetails[0])){
+        res.render("editProduct",{product:foundMaster.listingDetails[0],user:user,url:url});
+    }
+    else if(foundMaster.details.length==0|| !foundMaster.details[0].data )
     {
       var product={id:foundMaster._id,name:foundMaster.product};
+    //  console.log(product);
       res.render("editProduct",{product:product,user:user,url:url});
     }
     else if(!foundMaster.changedDetails||foundMaster.changedDetails.length==0){
@@ -181,35 +186,8 @@ app.get("/editProduct/:id",isAuthenticated,async(req,res)=>{
 
 
 
- storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/')
-  },
-  filename: function (req, file, cb) {
-    console.log(file.mimetype.substring(file.mimetype.indexOf("/")));
-    var ext=file.mimetype.substring(file.mimetype.indexOf("/")+1);
-    cb(null, Date.now() +"."+ ext) //Appending extension
-  }
-});
-
- upload=multer({storage:storage});
- image=upload.array('images');
 
 
-
-app.post("/editProduct",isAuthenticated,image,async(req,res)=>{
-  var r=req.body;
-  await Master.findById(req.body.id).then(async foundMaster=>{
-    var images=foundMaster.listingDetails[0].images;
-    if(req.files){
-    req.files.forEach(file=>{
-      images.push(file.path);
-    });}
-    console.log(images);
-      await Master.updateOne({_id:r.id},{changedDetails:[{images:images,description:r.description,weight:r.weight,name:r.name,length:r.length,width:r.width,height:r.height,color:r.color,category:r.category,features:r.features,id:r.id}]});
-    res.redirect("/");
-  }).catch(err=>{console.log(err.message);});
-});
 
 
 
@@ -218,7 +196,7 @@ app.get("/",isAuthenticated, async (req, res) => {
   await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
     user=foundUser;
   });
-  await Master.find({},(err,foundItems)=>{
+  await Master.find({approval:"approved"},(err,foundItems)=>{
     if(err)
     console.log(err.message);
     else{
@@ -241,7 +219,7 @@ app.post("/edit",isAuthenticated,async(req,res)=>{
 });
 
 app.post("/change",isAuthenticated,async(req,res)=>{
- await Master.updateOne({_id:req.body.id},{sku:req.body.sku,productType:req.body.productType,brand:req.body.brand,product:req.body.product,ean:req.body.ean,upc:req.body.upc})
+ await Master.updateOne({_id:req.body.id},{sku:req.body.sku,productType:req.body.productType,brand:req.body.brand,product:req.body.product,asin:req.body.asin,ean:req.body.ean,upc:req.body.upc})
   res.redirect("/");
 });
 
@@ -268,8 +246,15 @@ app.get("/product/:id",isAuthenticated,async(req,res)=>{
   });
   const url=req.protocol+'://'+req.get('host')+'/';
   await Master.findById(req.params.id,async(err,foundMaster)=>{
-
-    if(foundMaster.details.length!==0&&foundMaster.details[0].data){
+    var user="";
+    await User.findOne({email:req.session.passport.user},(err,foundUser)=>{
+      user=foundUser;
+    });
+    const url=req.protocol+'://'+req.get('host')+'/';
+    if((foundMaster.listingDetails && foundMaster.listingDetails[0])){
+      res.render("product",{success:true ,product:foundMaster.listingDetails[0],url:url,user:user});
+    }
+    else if(foundMaster.details.length!==0&&foundMaster.details[0].data){
       if(foundMaster.listingDetails.length!=0&& foundMaster.changedDetails.length==0)
       {
         var user="";
@@ -408,6 +393,8 @@ async function myfun(){
 
          child_process.exec(str,(err,data)=>{
         master.details.push(JSON.parse(data));
+        if(master.details[0].data)
+        master.status="enriched";
         master.save().catch(err=>{});
       });
     }
@@ -458,14 +445,25 @@ async function myfun(){
       const converter=csv()
       .fromFile('./username.csv')
       .then((json)=>{
-        console.log(json);
-        //add product to collection
-        // json.forEach(data=>{
-        //   var pro={};
-        //   for(var key in data){
-        //     pro.key:data[key]
-        //   }
-        // })
+        //console.log(json);
+        json.forEach(product=>{
+          const supplier=new Supplier({
+            product:product.ID,
+            name:"Supplier B",
+            price:product.Price,
+            quantity:product.Qty
+          });
+          supplier.save();
+          const master=new Master({
+            productType:product.Category,
+            brand:product.Brand,
+            product:product.ID,
+            upc:product.upc,
+            ean:product.ean,
+            supplier:supplier
+          });
+          master.save().catch(err=>{console.log(err);});
+        })
       }).catch(err=>{console.log(err.message);})
     }
   }

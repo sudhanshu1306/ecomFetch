@@ -31,7 +31,7 @@ const data=upload.single('data');
 const router=express.Router();
 
 router.get("/",isAuthenticated,getImport);
-router.post("/",postImport);
+router.post("/",data,postImport);
 router.get("/read",isAuthenticated,getRead);
 
 export default router;

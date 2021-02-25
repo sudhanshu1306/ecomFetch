@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import {supplierSchema} from "./supplier.js";
 const masterSchema=new mongoose.Schema({
-  sku:{type:String,unique:true},
+  sku:{type:String},
   productType:String,
   brand:String,
   product:{type:String,unique:true},
@@ -11,11 +11,14 @@ const masterSchema=new mongoose.Schema({
   goodPrice:String,
   ean:String,
   upc:String,
+  asin:String,
   supplier: [supplierSchema],
   details:[],
   changedDetails:[],
   listingDetails:[],
-  review:{type:String,default:"Not reviewed"}
+  review:{type:String,default:"Not reviewed"},
+  status:{type:String,default:"Not enriched"},
+  approval:{type:String,default:"Not checked"}
 },{
   timestamps:true
 });

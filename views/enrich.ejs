@@ -14,10 +14,12 @@
      <th scope="col">Product name</th>
      <th scope="col">EAN</th>
      <th scope="col">UPC</th>
+     <th scope="col">ASIN</th>
      <th scope="col">Suppliers</th>
      <th scope="col">Edit</th>
      <th scope="col">Delete</th>
-
+     <th scope="col">Enriched</th>
+     <th scope="col">Approval</th>
    </tr>
  </thead>
  <tbody>
@@ -30,10 +32,25 @@
        <td><a href="/product/<%=product._id%>"> <%= product.product %></a> </td>
        <td><%= product.ean %></td>
        <td><%= product.upc %></td>
+       <td><%= product.asin %></td>
        <td> <a href="/suppliers/<%=product._id%>"><%= product.supplier.length%></a> </td>
        <td><form class="" action="/edit" method="post"><button type="submit" name="id" class="btn btn-outline" value="<%=product._id%>"><i class="bi bi-pencil-square"></i></button></form></td>
        <td> <a href="/review/delete/<%=product._id%>" onclick="return del();"><button type="button" class="btn btn-outline"> <i class="bi bi-trash-fill"></i></button></a> </td>
+        <td><%= product.status %></td>
+       <td>
+         <form class="" action="/review/approve" method="post">
 
+           <select style="width:120px;"  class="custom-select" id="inputGroupSelect03" name="approval">
+             <option selected><%=product.approval%></option>
+             <option value="approved">Approved</option>
+             <option value="rejected">Rejected</option>
+           </select>
+
+           <div class="input-group-prepend">
+             <button class="btn btn-outline-secondary btn-sm" type="submit" name="id" value="<%=product._id%>">Change</button>
+           </div>
+         </form>
+       </td>
      </tr>
 
    <% }) %>
