@@ -27,6 +27,8 @@ import csv from "csvtojson";
 import ejs from "ejs";
 import multer from "multer";
 import objectsToCsv from "objects-to-csv";
+import reader from 'xlsx';
+import Excel from "exceljs";
 
 const Port = process.env.PORT;
 
@@ -319,13 +321,36 @@ app.get("/download",async(req,res)=>{
  await  Master.find({},async(err,foundMasters)=>{
    var obj=[];
    foundMasters.forEach(master=>{
-     obj.push(master._doc);
+     // obj.push(master._doc);
+     var atr={};
+     for(var property in master._doc){
+       if(property!=="details" && property!=="_id" && property!=="changedDetails"&& property!=="listingDetails" && property!=="review" && property!=="status" && property!=="approval" && property!=="mapDatabase" && property!=="supplier" && property!=="createdAt" && property!=="updatedAt" && property!=="__v")
+       atr[property]=master._doc[property];
+     }
+     obj.push(atr);
    });
+   const workbook = new Excel.Workbook();
+   workbook.xlsx.readFile("./uploads/export.xlsx").then(function() {
+        const worksheet = workbook.getWorksheet("Sheet1");
+        console.log(worksheet);
+        workbook.removeWorksheet(worksheet.id);
+        return workbook.xlsx.writeFile( "./uploads/export.xlsx");
+});
+
+   const file = reader.readFile('./uploads/export.xlsx')
+   const ws = reader.utils.json_to_sheet(obj)
+
+   reader.utils.book_append_sheet(file,ws,"Sheet1")
+
+   // Writing to our file
+   reader.writeFile(file,'./uploads/export.xlsx')
+
     const csv = new objectsToCsv(obj);
+
     console.log("writing file to disk ");
-    console.log(obj[0]);
+    //console.log(obj[0]);
     await csv.toDisk('./uploads/export.csv');
-    res.redirect("/uploads/export.csv");
+    res.redirect("/uploads/export.xlsx");
   });
 });
 

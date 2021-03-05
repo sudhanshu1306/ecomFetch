@@ -18,9 +18,12 @@ const masterSchema=new mongoose.Schema({
   listingDetails:[],
   review:{type:String,default:"Not reviewed"},
   status:{type:String,default:"Not enriched"},
-  approval:{type:String,default:"Not checked"}
+  approval:{type:String,default:"Not checked"},
+  mapDatabase:[],
 },{
-  timestamps:true
+  strict:false,
+  timestamps:true,
+
 });
 const Master=new mongoose.model('Master',masterSchema);
 export default Master;
